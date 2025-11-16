@@ -1,0 +1,367 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Income And Expenditure Money</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+    }
+    nav {
+      background: #1f1f1f;
+      padding: 1em 2em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .logo {
+      font-weight: bold;
+      color: #03dac6;
+      font-size: 1.3em;
+    }
+    .nav-links a {
+      color: #ccc;
+      margin-left: 1em;
+      text-decoration: none;
+      padding: 8px;
+      border-radius: 6px;
+    }
+    .nav-links a.active, .nav-links a:hover {
+      background: #2e2e2e;
+      color: #03dac6;
+    }
+    .page {
+      display: none;
+      padding: 2em;
+    }
+    .active-page {
+      display: block;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: none;
+      font-size: 1em;
+    }
+    input, select {
+      background: #2a2a2a;
+      color: #fff;
+    }
+    button {
+      background: #03dac6;
+      color: #121212;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00c4b4;
+    }
+    .card-group {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    .summary-card {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      flex: 1;
+      min-width: 180px;
+      text-align: center;
+    }
+    .transaction-log {
+      background: #1e1e1e;
+      padding: 10px;
+      margin: 10px 0;
+      border-left: 4px solid #03dac6;
+      border-radius: 6px;
+    }
+    .filter-btn {
+      background: #2a2a2a;
+      color: #ccc;
+      margin-right: 6px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: #03dac6;
+      color: #121212;
+    }
+    .flex {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .half {
+      flex: 1;
+      min-width: 300px;
+    }
+    #hasilTabungan {
+      background: #1e1e1e;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-weight: bold;
+      color: #03dac6;
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo">Income And Expenditure Money</div>
+  <div class="nav-links">
+    <a href="#" class="nav-link active" data-target="dashboard">Dashboard</a>
+    <a href="#" class="nav-link" data-target="cashflow">Cashflow</a>
+    <a href="#" class="nav-link" data-target="tabungan">Tabungan</a>
+  </div>
+</nav>
+<main>
+  <!-- Dashboard -->
+  <section id="dashboard" class="page active-page">
+    <h2>Dashboard</h2>
+    <div class="card-group">
+      <div class="summary-card">
+        <h3>Total Saldo Aktif</h3>
+        <p id="saldoAktif" style="font-size:1.5em;">Rp 0</p>
+      </div>
+      <div class="summary-card">
+        <h3>Pemasukan Bulan Ini</h3>
+        <p id="pemasukanBulanIni" style="font-size:1.5em;">Rp 0</p>
+      </div>
+      <div class="summary-card">
+        <h3>Pengeluaran Bulan Ini</h3>
+        <p id="pengeluaranBulanIni" style="font-size:1.5em;">Rp 0</p>
+      </div>
+    </div>
+    <h3>Grafik Cashflow 6 Bulan Terakhir</h3>
+    <canvas id="cashflowChart" width="600" height="300"></canvas>
+  </section>
+
+  <!-- Cashflow -->
+  <section id="cashflow" class="page">
+    <h2>Cashflow</h2>
+    <div class="flex">
+      <div class="half">
+        <h3>Tambah Transaksi</h3>
+        <form id="formTambahTransaksi">
+          <input type="text" id="deskripsi" placeholder="Deskripsi" required>
+          <input type="number" id="jumlah" placeholder="Jumlah (Rp)" required>
+          <input type="date" id="tanggal" required>
+          <select id="jenis" required>
+            <option value="">-- Jenis --</option>
+            <option value="pemasukan">Pemasukan</option>
+            <option value="pengeluaran">Pengeluaran</option>
+          </select>
+          <input type="text" id="keinginan" placeholder="Keinginan (opsional)">
+          <button type="submit">Tambah Transaksi</button>
+        </form>
+      </div>
+      <div class="half">
+        <h3>Riwayat Transaksi</h3>
+        <div class="filter-bar">
+          <button class="filter-btn active" data-filter="semua">Semua</button>
+          <button class="filter-btn" data-filter="pemasukan">Pemasukan</button>
+          <button class="filter-btn" data-filter="pengeluaran">Pengeluaran</button>
+        </div>
+        <div id="riwayatTransaksi" style="max-height:400px; overflow-y:auto;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tabungan -->
+  <section id="tabungan" class="page">
+    <h2>Simulasi Tabungan Cepat</h2>
+    <input type="number" id="targetJumlah" placeholder="Target tabungan (Rp)" min="1">
+    <input type="number" id="jangkaWaktu" placeholder="Jangka waktu (bulan)" min="1">
+    <button id="hitungTabungan">Hitung per Hari</button>
+    <div id="hasilTabungan"></div>
+  </section>
+</main>
+<script>
+  const navLinks = document.querySelectorAll('.nav-link');
+  const pages = document.querySelectorAll('.page');
+  let transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+  let filterStatus = 'semua';
+
+  function formatRupiah(num) {
+    return 'Rp ' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  // Navigasi antar halaman
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      const target = link.getAttribute('data-target');
+      pages.forEach(p => p.classList.remove('active-page'));
+      document.getElementById(target).classList.add('active-page');
+      if (target === 'dashboard') updateDashboard();
+      if (target === 'cashflow') renderRiwayat();
+    });
+  });
+
+  // Tambah transaksi
+  document.getElementById('formTambahTransaksi').addEventListener('submit', e => {
+    e.preventDefault();
+    const deskripsi = document.getElementById('deskripsi').value.trim();
+    const jumlah = Number(document.getElementById('jumlah').value);
+    const tanggal = document.getElementById('tanggal').value;
+    const jenis = document.getElementById('jenis').value;
+    const keinginan = document.getElementById('keinginan').value.trim();
+    if (deskripsi && jumlah && tanggal && jenis) {
+      transaksi.push({ id: Date.now(), deskripsi, jumlah, tanggal, jenis, keinginan });
+      localStorage.setItem('transaksi', JSON.stringify(transaksi));
+      document.getElementById('formTambahTransaksi').reset();
+      alert('Transaksi ditambahkan!');
+      renderRiwayat();
+      updateDashboard();
+    }
+  });
+
+  // Filter riwayat
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterStatus = btn.getAttribute('data-filter');
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderRiwayat();
+    });
+  });
+
+  function renderRiwayat() {
+    const container = document.getElementById('riwayatTransaksi');
+    container.innerHTML = '';
+    let data = transaksi.filter(t => filterStatus === 'semua' ? true : t.jenis === filterStatus);
+    if (!data.length) {
+      container.innerHTML = '<p>Tidak ada transaksi.</p>';
+      return;
+    }
+    data.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+    data.forEach(t => {
+      const div = document.createElement('div');
+      div.className = 'transaction-log';
+      div.innerHTML = `<strong>${t.deskripsi}</strong><br>${formatRupiah(t.jumlah)} — ${t.jenis}<br>${t.tanggal}${t.keinginan ? '<br>Keinginan: ' + t.keinginan : ''}`;
+      container.appendChild(div);
+    });
+  }
+
+  function updateDashboard() {
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    let saldo = 0, pemasukanBulan = 0, pengeluaranBulan = 0;
+    transaksi.forEach(t => {
+      if (t.jenis === 'pemasukan') saldo += t.jumlah;
+      else saldo -= t.jumlah;
+      const dt = new Date(t.tanggal);
+      if (dt.getMonth() === month && dt.getFullYear() === year) {
+        if (t.jenis === 'pemasukan') pemasukanBulan += t.jumlah;
+        else pengeluaranBulan += t.jumlah;
+      }
+    });
+    document.getElementById('saldoAktif').textContent = formatRupiah(saldo);
+    document.getElementById('pemasukanBulanIni').textContent = formatRupiah(pemasukanBulan);
+    document.getElementById('pengeluaranBulanIni').textContent = formatRupiah(pengeluaranBulan);
+    renderChart();
+  }
+
+  function renderChart() {
+    const ctx = document.getElementById('cashflowChart').getContext('2d');
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    const labels = [];
+    const pemasukanData = [];
+    const pengeluaranData = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(year, month - i, 1);
+      const label = date.toLocaleString('id-ID', { month: 'short' });
+      labels.push(label);
+      let pemasukan = 0, pengeluaran = 0;
+      transaksi.forEach(t => {
+        const dt = new Date(t.tanggal);
+        if (dt.getMonth() === date.getMonth() && dt.getFullYear() === date.getFullYear()) {
+          if (t.jenis === 'pemasukan') pemasukan += t.jumlah;
+          else pengeluaran += t.jumlah;
+        }
+      });
+      pemasukanData.push(pemasukan);
+      pengeluaranData.push(pengeluaran);
+    }
+
+    if (window.myChart) window.myChart.destroy();
+    window.myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Pemasukan',
+            data: pemasukanData,
+            borderColor: '#03dac6',
+            backgroundColor: '#03dac640',
+            fill: true,
+            tension: 0.3
+          },
+          {
+            label: 'Pengeluaran',
+            data: pengeluaranData,
+            borderColor: '#bb86fc',
+            backgroundColor: '#bb86fc40',
+            fill: true,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            ticks: { color: '#e0e0e0' },
+            grid: { color: '#333' }
+          },
+          y: {
+            ticks: { color: '#e0e0e0' },
+            grid: { color: '#333' }
+          }
+        }
+      }
+    });
+  }
+
+  document.getElementById('hitungTabungan').addEventListener('click', () => {
+    const target = Number(document.getElementById('targetJumlah').value);
+    const bulan = Number(document.getElementById('jangkaWaktu').value);
+    const hari = bulan * 30;
+    if (!target || !bulan) {
+      document.getElementById('hasilTabungan').textContent = 'Mohon isi target dan jangka waktu!';
+      return;
+    }
+    const perHari = Math.ceil(target / hari);
+    document.getElementById('hasilTabungan').textContent =
+      `Anda perlu menabung sekitar ${formatRupiah(perHari)} per hari untuk mencapai ${formatRupiah(target)} dalam ${bulan} bulan (${hari} hari).`;
+  });
+
+  // Inisialisasi saat pertama kali load
+  updateDashboard();
+  renderRiwayat();
+</script>
+</body>
+</html>
